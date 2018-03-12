@@ -1,0 +1,167 @@
+﻿<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <title>Qt使用ECharts</title>
+    <script src="qwebchannel.js"></script>
+    <!-- ECharts单文件引入 -->
+    <script src="build/dist/echarts.js"></script>
+	<script src="build/dist/jquery.min.js"></script>
+</head>
+<body>
+    <h3 style="color:#ff0000; text-align:center">实现Qt与Echarts数据交互的例子</h3>
+	<input type="text" value="属性" id="txt">
+    <input type="button" value="刷新数据" onclick="onRefresh()">
+	<input type="button" value="弹出框1" onclick="onTest()">
+	<input type="button" value="弹出框2" onclick="onTest2()">
+	<input type="button" value="调用c++" onclick="onCallCplus()">
+	<input type="button" value="设置属性" onclick="onSetProp()">
+	<input type="button" value="获取属性" onclick="onGetProp()">
+    <script>
+		var option= {
+			xAxis: {
+				type: 'category',
+				data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+			},
+			yAxis: {
+				type: 'value'
+			},
+			series: [{
+				data: [820, 932, 901, 934, 1290, 1330, 1320],
+				type: 'line'
+			}]
+		};
+
+        new QWebChannel(qt.webChannelTransport, function (channel) {
+            // 设置全局对象，实现与Qt程序进行通信
+            window.bridge = channel.objects.bridge;
+
+            // 通过监听Qt信号获取数据进行更新
+            bridge.updateData.connect(function (jd) {
+                if (window.myChart) {
+                    // 为echarts对象加载数据 
+                    myChart.setOption(jd);
+					
+					
+                }
+            });
+			bridge.addData.connect(function (data2) {
+				if (window.myChart) {
+					console.log(data2.data);
+					//option.xAxis.data.push("122");
+					//option.series[0].push(111);
+					//myChart.setOption(option);
+				}	
+			 
+			});
+        });
+		function onCallCplus()
+		{
+			if (window.bridge) {
+                bridge.testOneData(); // 调用Qt函数
+            }
+		}
+		function addPoint(value)
+		{
+				if (window.myChart) {
+					console.log("addPoint=",value);
+					option.xAxis.data.push("11");
+					option.series[0].data.push(1000);
+					console.log(option.series[0].data);
+					myChart.setOption(option);
+				}	
+		}
+		function callJs(value1,value2)
+		{
+			console.log(value1);
+			console.log(value2);
+			return value1+value2;
+		}
+		function callJs2(value1,value2)
+		{
+			console.log(value1);
+			console.log(value2);
+			var obj = {
+				name:"wang",
+				pass:"123456",
+				age:30
+			}
+			return obj;
+		}
+        function onRefresh() {
+            if (window.bridge) {
+                bridge.getDatas(); // 调用Qt函数
+            }
+        }
+		function onTest() {
+			if (window.bridge) {
+                bridge.test("测试","哈哈，c++slot函数调用了1"); // 调用Qt函数
+            }
+		}
+		function onTest2() {
+			if (window.bridge) {
+                bridge.test_public("测试","哈哈，c++公共函数我被调用了"); // 调用Qt函数
+				
+            }
+		}
+		function onSetProp(){
+			if (window.bridge) {
+                var txt = document.getElementById("txt").value;
+				//var txt2 = $("txt").val();
+				bridge.title=txt;
+            }
+		}
+		function onGetProp()
+		{
+			if (window.bridge) {
+                
+				alert(bridge.title);
+            }
+		}
+   </script>
+
+    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <div id="main" style="height:400px"></div>
+    <script type="text/javascript">
+        // 路径配置
+        require.config({
+            paths: {
+                echarts: 'build/dist'
+            }
+        });
+        
+        // 使用
+        require(
+            [
+                'echarts',
+				'echarts/chart/line',
+                'echarts/chart/chord'
+            ],
+            function (ec) {
+                // 基于准备好的dom，初始化echarts图表
+                window.myChart = ec.init(document.getElementById('main'), 'macarons');
+                
+                //窗体自适应    
+ 				window.onresize = myChart.resize ;       
+				var option2= {
+					xAxis: {
+						type: 'category',
+						data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+					},
+					yAxis: {
+						type: 'value'
+					},
+					series: [{
+						data: [820, 932, 901, 934, 1290, 1330, 1320],
+						type: 'line'
+					}]
+				};
+				// 显示标题，图例和空的坐标轴
+				myChart.setOption(option);
+
+// 异步加载数据
+			
+            }
+        );
+    </script>
+</body>
+

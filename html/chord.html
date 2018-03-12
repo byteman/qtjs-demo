@@ -1,0 +1,58 @@
+﻿<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <title>Qt使用ECharts</title>
+    <script src="qwebchannel.js"></script>
+    <!-- ECharts单文件引入 -->
+    <script src="build/dist/echarts.js"></script>
+</head>
+<body>
+    <h3 style="color:#ff0000; text-align:center">实现Qt与Echarts数据交互的例子</h3>
+    <input type="button" value="刷新数据" onclick="onRefresh()">
+    <script>
+        new QWebChannel(qt.webChannelTransport, function (channel) {
+            // 设置全局对象，实现与Qt程序进行通信
+            window.bridge = channel.objects.bridge;
+
+            // 通过监听Qt信号获取数据进行更新
+            bridge.updateData.connect(function (jsonData) {
+                if (window.myChart) {
+                    // 为echarts对象加载数据 
+                    myChart.setOption(jsonData);
+                }
+            });
+        });
+
+        function onRefresh() {
+            if (window.bridge) {
+                bridge.getDatas(); // 调用Qt函数
+            }
+        }
+   </script>
+
+    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <div id="main" style="height:400px"></div>
+    <script type="text/javascript">
+        // 路径配置
+        require.config({
+            paths: {
+                echarts: 'build/dist'
+            }
+        });
+        
+        // 使用
+        require(
+            [
+                'echarts',
+                'echarts/chart/chord'
+            ],
+            function (ec) {
+                // 基于准备好的dom，初始化echarts图表
+                window.myChart = ec.init(document.getElementById('main'), 'macarons');
+                
+                //窗体自适应    
+ 				window.onresize = myChart.resize ;        
+            }
+        );
+    </script>
+</body>

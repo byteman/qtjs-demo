@@ -1,0 +1,8 @@
+*.obj
+debug
+*.user
+ui_mainwindow.h
+*.stash
+*.Release
+/*.Debug
+/Makefile
